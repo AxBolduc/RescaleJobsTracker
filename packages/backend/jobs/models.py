@@ -23,7 +23,7 @@ class JobStatus(models.Model):
     }
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="statuses")
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="status_log")
     status_type = models.CharField(max_length=32, choices=STATUSES)
     timestamp = models.DateTimeField(auto_now_add=True)
 
