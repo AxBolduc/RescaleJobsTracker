@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Job, JobStatus
 
+from django.db import transaction
+
 
 class JobStatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,16 +11,19 @@ class JobStatusSerializer(serializers.ModelSerializer):
 
 
 class JobSerializer(serializers.ModelSerializer):
-    latest_status = serializers.SerializerMethodField()
+    statuses = JobStatusSerializer(many=True, read_only=True)
 
     class Meta:
         model = Job
-        fields = ("id", "name", "created_at", "updated_at", "latest_status")
+        fields = ("id", "name", "created_at", "updated_at", "statuses")
 
-    def get_latest_status(self, obj):
-        latest_status_obj = obj.statuses.order_by("-timestamp").first()
+    def create(self, validated_data):
+        with transaction.atomic():
+            job = Job.objects.create(**validated_data)
 
-        if latest_status_obj:
-            return JobStatusSerializer(latest_status_obj).data
-        else:
-            return None
+            JobStatus.objects.create(
+                job=job,
+                status_type=JobStatus.STATUSES["PENDING"],
+            )
+
+        return job

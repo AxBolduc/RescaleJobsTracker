@@ -26,3 +26,6 @@ class JobStatus(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="statuses")
     status_type = models.CharField(max_length=32, choices=STATUSES)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
