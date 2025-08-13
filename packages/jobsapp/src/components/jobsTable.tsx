@@ -25,56 +25,40 @@ import {
   AlertDialogHeader,
   AlertDialogTrigger,
 } from './ui/alert-dialog'
+import { JobsService } from '@/api/jobs.service'
 
 export default function JobsTable() {
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ['jobs'],
-    queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/jobs`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch jobs')
-      }
-
-      return response.json() as Promise<
-        Array<{
-          name: string
-          status_log: Array<{ status_type: string }>
-        }>
-      >
-    },
+    queryKey: JobsService.queryKeys.getJobs,
+    queryFn: JobsService.getJobs,
   })
 
   return (
     <div className="border rounded-xl bg-white overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-lg font-bold">Job Name</TableHead>
-            <TableHead className="text-lg font-bold">Status</TableHead>
-            <TableHead className="w-[70px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="text-black">
-          {jobs?.map((job) => (
-            <TableRow key={job.name}>
-              <TableCell>{job.name}</TableCell>
-              <TableCell>{job.status_log[0].status_type}</TableCell>
-              <TableCell className="w-[70px]">
-                <JobDropdown />
-              </TableCell>
+      {isLoading ? (
+        <>Loading...</>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-lg font-bold">Job Name</TableHead>
+              <TableHead className="text-lg font-bold">Status</TableHead>
+              <TableHead className="w-[70px]"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody className="text-black">
+            {jobs?.map((job) => (
+              <TableRow key={job.name}>
+                <TableCell>{job.name}</TableCell>
+                <TableCell>{job.status_log[0].status_type}</TableCell>
+                <TableCell className="w-[70px]">
+                  <JobDropdown />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   )
 }
