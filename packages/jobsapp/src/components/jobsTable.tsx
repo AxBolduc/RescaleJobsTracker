@@ -1,6 +1,7 @@
 import { MoreHorizontal } from 'lucide-react'
 import { AlertDialogTitle } from '@radix-ui/react-alert-dialog'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -25,22 +26,33 @@ import {
   AlertDialogTrigger,
 } from './ui/alert-dialog'
 
-const JOBS = [
-  {
-    name: 'Job 1',
-    status: 'Pending',
-  },
-  {
-    name: 'Job 2',
-    status: 'Completed',
-  },
-  {
-    name: 'Job 3',
-    status: 'Failed',
-  },
-]
-
 export default function JobsTable() {
+  const { data: jobs, isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/jobs`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs')
+      }
+
+      return response.json() as Promise<
+        Array<{
+          name: string
+          status_log: Array<{ status_type: string }>
+        }>
+      >
+    },
+  })
+
   return (
     <div className="border rounded-xl bg-white overflow-hidden">
       <Table>
@@ -52,10 +64,10 @@ export default function JobsTable() {
           </TableRow>
         </TableHeader>
         <TableBody className="text-black">
-          {JOBS.map((job) => (
+          {jobs?.map((job) => (
             <TableRow key={job.name}>
               <TableCell>{job.name}</TableCell>
-              <TableCell>{job.status}</TableCell>
+              <TableCell>{job.status_log[0].status_type}</TableCell>
               <TableCell className="w-[70px]">
                 <JobDropdown />
               </TableCell>
