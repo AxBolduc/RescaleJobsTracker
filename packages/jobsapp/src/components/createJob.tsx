@@ -55,7 +55,7 @@ export default function CreateJob() {
   })
 
   return (
-    <Card className-card="w-full max-w-sm">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Create Job</CardTitle>
       </CardHeader>
