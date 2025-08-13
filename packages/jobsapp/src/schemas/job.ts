@@ -1,9 +1,17 @@
 import z from 'zod'
 
 export const JobSchema = z.object({
-  id: z.number(),
+  id: z.string().uuid(),
   name: z.string(),
-  status_log: z.array(z.object({ status_type: z.string() })),
+  created_at: z.string(),
+  updated_at: z.string(),
+  status_log: z.array(
+    z.object({
+      id: z.string(),
+      status_type: z.string(),
+      timestamp: z.string(),
+    }),
+  ),
 })
 
 export const CreateJobSchema = z.object({

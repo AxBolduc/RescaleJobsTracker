@@ -1,4 +1,4 @@
-import type { CreateJob } from '@/schemas/job';
+import type { CreateJob } from '@/schemas/job'
 import { JobSchema } from '@/schemas/job'
 
 export const JobsService = {
@@ -18,7 +18,6 @@ export const JobsService = {
     }
 
     const data = await response.json()
-
     return JobSchema.array().parse(data)
   },
   createJob: async ({ name }: CreateJob) => {
@@ -40,7 +39,6 @@ export const JobsService = {
     }
 
     const data = await response.json()
-
     return JobSchema.parse(data)
   },
   queryKeys: {
