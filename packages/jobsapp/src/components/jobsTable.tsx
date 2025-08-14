@@ -1,5 +1,4 @@
 import { MoreHorizontal } from 'lucide-react'
-import { AlertDialogTitle } from '@radix-ui/react-alert-dialog'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from './ui/button'
@@ -18,13 +17,21 @@ import {
   TableRow,
 } from './ui/table'
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTrigger,
-} from './ui/alert-dialog'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
 import { JobsService } from '@/api/jobs.service'
 
 export default function JobsTable() {
@@ -52,7 +59,7 @@ export default function JobsTable() {
                 <TableCell>{job.name}</TableCell>
                 <TableCell>{job.status_log[0].status_type}</TableCell>
                 <TableCell className="w-[70px]">
-                  <JobDropdown />
+                  <JobDropdown jobId={job.id} />
                 </TableCell>
               </TableRow>
             ))}
@@ -63,8 +70,74 @@ export default function JobsTable() {
   )
 }
 
-function JobDropdown() {
-  const [jobToDelete, setJobToDelete] = useState<string | null>(null)
+type DialogMode = 'DELETE' | 'UPDATE_STATUS' | 'CLOSED'
+
+interface DialogContentProps {
+  onClose: () => void
+  jobId: string
+}
+
+function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Delete Job</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to delete this job?
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={() => {
+            onClose()
+          }}
+        >
+          Delete
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+}
+
+function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Update Status</DialogTitle>
+        <DialogDescription>Update the status of this job</DialogDescription>
+      </DialogHeader>
+      <Select>
+        <SelectTrigger>
+          <SelectValue placeholder="Select a status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="PENDING">Pending</SelectItem>
+          <SelectItem value="COMPLETED">Completed</SelectItem>
+        </SelectContent>
+      </Select>
+      <DialogFooter>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="default"
+          onClick={() => {
+            onClose()
+          }}
+        >
+          Update
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+}
+
+function JobDropdown({ jobId }: { jobId: string }) {
+  const [dialogMode, setDialogMode] = useState<DialogMode>('CLOSED')
 
   return (
     <DropdownMenu>
@@ -75,62 +148,44 @@ function JobDropdown() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem>Update Status</DropdownMenuItem>
-        <AlertDialog
-          open={!!jobToDelete}
-          onOpenChange={(open) => !open && setJobToDelete(null)}
+        <Dialog
+          open={dialogMode !== 'CLOSED'}
+          onOpenChange={(open) => !open && setDialogMode('CLOSED')}
         >
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault()
-                setJobToDelete('true')
-              }}
-            >
-              Delete
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-          <DeleteJobDialogContent
-            onClose={() => setJobToDelete(null)}
-            onDelete={() => console.log('deleted')}
-          />
-        </AlertDialog>
+          <DialogTrigger asChild>
+            <>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setDialogMode('UPDATE_STATUS')
+                }}
+              >
+                Update Status
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-500"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setDialogMode('DELETE')
+                }}
+              >
+                Delete
+              </DropdownMenuItem>
+            </>
+          </DialogTrigger>
+          {dialogMode === 'DELETE' ? (
+            <DeleteJobDialogContent
+              onClose={() => setDialogMode('CLOSED')}
+              jobId={jobId}
+            />
+          ) : (
+            <UpdateStatusDialogContent
+              onClose={() => setDialogMode('CLOSED')}
+              jobId={jobId}
+            />
+          )}
+        </Dialog>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-interface AlertDialogContentProps {
-  onDelete: () => void
-  onClose: () => void
-}
-
-function DeleteJobDialogContent({
-  onDelete,
-  onClose,
-}: AlertDialogContentProps) {
-  return (
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Delete Job</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to delete this job?
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={() => {
-            onDelete()
-            onClose()
-          }}
-        >
-          Delete
-        </Button>
-      </AlertDialogFooter>
-    </AlertDialogContent>
   )
 }
