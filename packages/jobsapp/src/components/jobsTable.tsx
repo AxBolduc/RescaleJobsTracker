@@ -84,10 +84,9 @@ interface DialogContentProps {
 function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
   const queryClient = useQueryClient()
 
-  const { mutate } = useMutation({
+  const { mutate, isPending, isError } = useMutation({
     mutationKey: JobsService.queryKeys.deleteJob(jobId),
     mutationFn: () => {
-      console.log('deleteJob')
       return JobsService.deleteJob(jobId)
     },
     onSuccess: () => {
@@ -106,6 +105,16 @@ function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
           Are you sure you want to delete this job?
         </DialogDescription>
       </DialogHeader>
+      {isPending && (
+        <div className="py-2 ">
+          <p>Deleting job...</p>
+        </div>
+      )}
+      {isError && (
+        <div className="py-2 text-destructive">
+          <p>Failed to delete job, please try again.</p>
+        </div>
+      )}
       <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           Cancel
@@ -140,7 +149,7 @@ function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
 
   const queryClient = useQueryClient()
 
-  const { mutate } = useMutation({
+  const { mutate, isError, isPending } = useMutation({
     mutationKey: JobsService.queryKeys.updateJobStatus(jobId),
     mutationFn: (updateJobStatus: UpdateJobStatus) =>
       JobsService.updateJobStatus(jobId, updateJobStatus),
@@ -169,7 +178,7 @@ function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
           <DialogTitle>Update Status</DialogTitle>
           <DialogDescription>Update the status of this job</DialogDescription>
         </DialogHeader>
-        <div className="py-2">
+        <div className="py-2 flex flex-col gap-2">
           <form.AppField
             name="status"
             children={(field) => {
@@ -179,6 +188,7 @@ function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
                   value={field.state.value}
                   onValueChange={field.handleChange}
                   onOpenChange={field.handleBlur}
+                  disabled={isPending}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a status" />
@@ -201,6 +211,16 @@ function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
               )
             }}
           />
+          {isPending && (
+            <div className="text-gray-700">
+              <p>Updating job status...</p>
+            </div>
+          )}
+          {isError && (
+            <div className="text-destructive">
+              <p>Failed to update job status, please try again.</p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -213,7 +233,7 @@ function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
               <Button
                 variant="default"
                 type="submit"
-                disabled={!canSubmit || isSubmitting}
+                disabled={!canSubmit || isSubmitting || isPending}
               >
                 Update
               </Button>
