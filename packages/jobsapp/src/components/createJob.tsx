@@ -8,7 +8,7 @@ export default function CreateJob() {
   const createJobMutation = useMutation({
     mutationKey: JobsService.queryKeys.createJob,
     mutationFn: JobsService.createJob,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['jobs'],
       })

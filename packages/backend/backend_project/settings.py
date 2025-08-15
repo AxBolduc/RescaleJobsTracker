@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "123")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", False)
 
-ALLOWED_HOSTS = ["localhost", "localhost:8080"]
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
 APPEND_SLASH = False
 
@@ -56,7 +56,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "DJANGO_ALLOWED_ORIGINS", "http://localhost:3000"
+).split(",")
 
 CORS_ALLOW_METHODS = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
 

@@ -1,0 +1,11 @@
+include:
+  - packages/backend/docker-compose.yaml
+services:
+  frontend:
+    build: packages/jobsapp
+    ports:
+      - "3000:80"
+    depends_on:
+      - django-web
+volumes:
+  postgres_data:
