@@ -49,7 +49,7 @@ export default function JobsTable() {
       {isLoading ? (
         <>Loading...</>
       ) : (
-        <Table>
+        <Table id="jobs-table">
           <TableHeader>
             <TableRow>
               <TableHead className="text-lg font-bold">Job Name</TableHead>

@@ -5,7 +5,7 @@ up:
 	docker compose up
 
 test:
-	echo "TODO"
+	docker compose -f docker-compose.test.yaml up
 
 down:
 	docker compose down

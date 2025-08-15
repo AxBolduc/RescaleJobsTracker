@@ -1,0 +1,10 @@
+include:
+  - docker-compose.yaml
+services:
+  tests:
+    build:
+      context: packages/jobsapp
+      dockerfile: Dockerfile.e2e-test
+    depends_on:
+      - django-web
+      - frontend

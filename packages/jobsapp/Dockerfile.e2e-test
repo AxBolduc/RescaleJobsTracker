@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/playwright:v1.54.2-noble
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+COPY .env.production .env
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm install install --frozen-lockfile
+
+RUN npx playwright install-deps
+
+COPY . .
+
+CMD ["npm", "run", "test:e2e"]
