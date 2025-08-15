@@ -23,4 +23,3 @@ eggs/
 # Logs and temporary files
 *.log
 *.tmp
-.env
