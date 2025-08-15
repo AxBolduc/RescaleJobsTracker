@@ -1,6 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -32,7 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
+import type { UpdateJobStatus } from '@/schemas/job'
+import { UpdateJobStatusSchema } from '@/schemas/job'
 import { JobsService } from '@/api/jobs.service'
+import { JOB_STATUSES } from '@/constants'
+import { useAppForm } from '@/hooks/job.form'
 
 export default function JobsTable() {
   const { data: jobs, isLoading } = useQuery({
@@ -78,6 +82,22 @@ interface DialogContentProps {
 }
 
 function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
+  const queryClient = useQueryClient()
+
+  const { mutate } = useMutation({
+    mutationKey: JobsService.queryKeys.deleteJob(jobId),
+    mutationFn: () => {
+      console.log('deleteJob')
+      return JobsService.deleteJob(jobId)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: JobsService.queryKeys.getJobs,
+      })
+      onClose()
+    },
+  })
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -93,7 +113,7 @@ function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
         <Button
           variant="destructive"
           onClick={() => {
-            onClose()
+            mutate()
           }}
         >
           Delete
@@ -104,34 +124,103 @@ function DeleteJobDialogContent({ jobId, onClose }: DialogContentProps) {
 }
 
 function UpdateStatusDialogContent({ onClose, jobId }: DialogContentProps) {
+  const form = useAppForm({
+    defaultValues: {
+      status: '',
+    },
+
+    validators: {
+      onChange: UpdateJobStatusSchema,
+    },
+
+    onSubmit: ({ value: formData }) => {
+      mutate(formData)
+    },
+  })
+
+  const queryClient = useQueryClient()
+
+  const { mutate } = useMutation({
+    mutationKey: JobsService.queryKeys.updateJobStatus(jobId),
+    mutationFn: (updateJobStatus: UpdateJobStatus) =>
+      JobsService.updateJobStatus(jobId, updateJobStatus),
+    onSuccess: () => {
+      console.log('success', jobId)
+      queryClient.invalidateQueries({
+        queryKey: JobsService.queryKeys.getJobs,
+      })
+      onClose()
+    },
+  })
+
   return (
     <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Update Status</DialogTitle>
-        <DialogDescription>Update the status of this job</DialogDescription>
-      </DialogHeader>
-      <Select>
-        <SelectTrigger>
-          <SelectValue placeholder="Select a status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="PENDING">Pending</SelectItem>
-          <SelectItem value="COMPLETED">Completed</SelectItem>
-        </SelectContent>
-      </Select>
-      <DialogFooter>
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          variant="default"
-          onClick={() => {
-            onClose()
-          }}
-        >
-          Update
-        </Button>
-      </DialogFooter>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+        onReset={(e) => {
+          e.preventDefault()
+          form.reset()
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle>Update Status</DialogTitle>
+          <DialogDescription>Update the status of this job</DialogDescription>
+        </DialogHeader>
+        <div className="py-2">
+          <form.AppField
+            name="status"
+            children={(field) => {
+              return (
+                <Select
+                  name={field.name}
+                  value={field.state.value}
+                  onValueChange={field.handleChange}
+                  onOpenChange={field.handleBlur}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(JOB_STATUSES).map(
+                      ([dbValue, displayValue]) => {
+                        return (
+                          <SelectItem
+                            key={`${dbValue}-${displayValue}`}
+                            value={dbValue}
+                          >
+                            {displayValue}
+                          </SelectItem>
+                        )
+                      },
+                    )}
+                  </SelectContent>
+                </Select>
+              )
+            }}
+          />
+        </div>
+
+        <DialogFooter>
+          <Button variant="secondary" onClick={onClose} type="reset">
+            Cancel
+          </Button>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+            children={([canSubmit, isSubmitting]) => (
+              <Button
+                variant="default"
+                type="submit"
+                disabled={!canSubmit || isSubmitting}
+              >
+                Update
+              </Button>
+            )}
+          />
+        </DialogFooter>
+      </form>
     </DialogContent>
   )
 }

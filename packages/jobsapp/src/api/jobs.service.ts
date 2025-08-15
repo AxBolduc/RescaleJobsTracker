@@ -1,4 +1,4 @@
-import type { CreateJob } from '@/schemas/job'
+import type { CreateJob, UpdateJobStatus } from '@/schemas/job'
 import { JobSchema } from '@/schemas/job'
 
 export const JobsService = {
@@ -41,8 +41,41 @@ export const JobsService = {
     const data = await response.json()
     return JobSchema.parse(data)
   },
+  updateJobStatus: async (jobId: string, updateJobRequest: UpdateJobStatus) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/jobs/${jobId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateJobRequest),
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to update job status')
+    }
+
+    const data = await response.json()
+    return JobSchema.parse(data)
+  },
+  deleteJob: async (id: string) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/jobs/${id}`,
+      {
+        method: 'DELETE',
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to delete job')
+    }
+  },
   queryKeys: {
     getJobs: ['jobs'],
     createJob: ['createJob'],
+    updateJobStatus: (jobId: string) => ['updateJobStatus', { jobId, status }],
+    deleteJob: (jobId: string) => ['deleteJob', jobId],
   },
 }

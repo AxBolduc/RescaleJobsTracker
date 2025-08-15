@@ -18,5 +18,10 @@ export const CreateJobSchema = z.object({
   name: z.string().min(4, 'Job name is required'),
 })
 
+export const UpdateJobStatusSchema = z.object({
+  status: z.string().nonempty(),
+})
+
 export type Job = z.infer<typeof JobSchema>
 export type CreateJob = z.infer<typeof CreateJobSchema>
+export type UpdateJobStatus = z.infer<typeof UpdateJobStatusSchema>
